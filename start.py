@@ -18,10 +18,14 @@ SPRITESCALE = 13
 screen = pygame.display.set_mode(WINDOWSIZE, pygame.DOUBLEBUF)
 pygame.display.set_caption("Platforming at its Learningest!")
 
+blackground = pygame.Surface(screen.get_size()).convert()
+blackground.fill((0, 0, 0))
 backgrounds = parallax.ParallaxSurface(WINDOWSIZE, pygame.RLEACCEL)
+
 pcIdle = pygame.sprite.Group()
 pcRun = pygame.sprite.Group()
 pcJumpUp = pygame.sprite.Group()
+pcJumpDown = pygame.sprite.Group()
 tiles = pygame.sprite.Group()
 
 def importbackgrounds():
@@ -40,6 +44,48 @@ def importsprites():
     pcRun.add(NewSprite)
     NewSprite = sClasses.Player(scale, 'jump up')
     pcJumpUp.add(NewSprite)
+    NewSprite = sClasses.Player(scale, 'jump down')
+    pcJumpDown.add(NewSprite)
+
+def eventhandler(event):
+    global PlayerState, PlayerDirection, speed
+    ##CLOSE WINDOW
+    if event.type == pygame.QUIT:
+        sys.exit()
+
+    pressedkeys = pygame.key.get_pressed()
+    if event.type == pygame.KEYDOWN:
+        if pressedkeys[pygame.K_ESCAPE]:
+            pygame.quit()
+            sys.exit(0)
+    ##CLOSE WINDOW
+    ##PLAYER MOVEMENT
+        ##HORIZONTAL MOVEMENT
+    if event.type == KEYDOWN and event.key == K_RIGHT:
+        speed += 10
+        PlayerState = 'run'
+        PlayerDirection = 'right'
+    if event.type == KEYUP and event.key == K_RIGHT:
+        speed -= 10
+        PlayerState = 'idle'
+        PlayerDirection = 'right'
+    if event.type == KEYDOWN and event.key == K_LEFT:
+        speed -= 10
+        PlayerState = 'run'
+        PlayerDirection = 'left'
+    if event.type == KEYUP and event.key == K_LEFT:
+        speed += 10
+        PlayerState = 'idle'
+        PlayerDirection = 'left'
+        ##HORIZONTAL MOVEMENT
+        ##VERTICAL MOVEMENT
+    if pressedkeys[K_SPACE]:
+        PlayerState = 'jump up'
+    if event.type == KEYUP and event.key == K_SPACE:
+        PlayerState = 'jump down'
+        #todo: after collision, PlayerState needs to go back to whatever button is being pressed
+        ##VERTICAL MOVEMENT
+    ##PLAYER MOVEMENT
 
 def renderscreen(PlayerState, PlayerDirection):
     def parallax():
@@ -49,23 +95,23 @@ def renderscreen(PlayerState, PlayerDirection):
         if (t - time_ref) > 60:
             backgrounds.draw(screen)
 
-    def spriteanimation(state=None, direction=PlayerDirection):
-        if state == 'run':
-            if direction == 'left':
-                pcRun.update('left')
-                pcRun.draw(screen)
-            else:
-                pcRun.update()
-                pcRun.draw(screen)
-        if state == 'jump up':
-            pcJumpUp.update()
+    def spriteanimation(PlayerState, PlayerDirection):
+        if PlayerState == 'run':
+            pcRun.update(PlayerDirection)
+            pcRun.draw(screen)
+        elif PlayerState == 'jump up':
+            pcJumpUp.update(PlayerDirection)
             pcJumpUp.draw(screen)
+        elif PlayerState == 'jump down':
+            pcJumpDown.update(PlayerDirection)
+            pcJumpDown.draw(screen)
         else:
-            pcIdle.update()
+            pcIdle.update(PlayerDirection)
             pcIdle.draw(screen)
 
+    screen.blit(blackground, (0, 0))
     parallax()
-    spriteanimation(PlayerState)
+    spriteanimation(PlayerState, PlayerDirection)
 
     pygame.display.flip()
 
@@ -81,39 +127,7 @@ PlayerDirection = 'right'
 while True:
     #Event Handleing
     for event in pygame.event.get():
-        ##CLOSE WINDOW
-        if event.type == pygame.QUIT:
-            sys.exit()
-        if event.type == pygame.KEYDOWN:
-            pressedkeys = pygame.key.get_pressed()
-            if pressedkeys[pygame.K_ESCAPE]:
-                pygame.quit()
-                sys.exit(0)
-        ##CLOSE WINDOW
-        ##PARALLAX
-        if event.type == KEYDOWN and event.key == K_RIGHT:
-            speed += 10
-            PlayerState = 'run'
-            PlayerDirection = 'right'
-        if event.type == KEYUP and event.key == K_RIGHT:
-            speed -= 10
-            PlayerState = 'idle'
-            PlayerDirection = 'right'
-
-        if event.type == KEYDOWN and event.key == K_LEFT:
-            speed -= 10
-            PlayerState = 'run'
-            PlayerDirection = 'left'
-        if event.type == KEYUP and event.key == K_LEFT:
-            speed += 10
-            PlayerState = 'idle'
-            PlayerDirection = 'left'
-        if event.type == KEYDOWN and event.key == K_SPACE:
-            PlayerState = 'jump up'
-        if event.type == KEYUP and event.key == K_SPACE:
-            PlayerState = 'idle'
-        ##PARALLAX
-
+        eventhandler(event)
     #print pygame.mouse.get_pos()
     renderscreen(PlayerState, PlayerDirection)
 
