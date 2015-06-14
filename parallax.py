@@ -62,7 +62,7 @@ class ParallaxSurface(object):
             image_path is the path to the image to be used
             scroll_factor is the slowdown factor for this parallax level. '''
         try:
-            image = (pygame.image.load(image_path))
+            image = (pygame.image.load(image_path)).convert_alpha()
         except:
             message = "couldn't open image:" + image_path
             raise SystemExit, message
